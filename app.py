@@ -4,8 +4,8 @@ import os
 
 app = Flask(__name__)
 
-SUPABASE_URL = "https://ioxmssaxiqqvhqowrxwi.supabase.co"
-SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")  # set in Render dashboard
+SUPABASE_URL = "https://YOUR_PROJECT.supabase.co"
+SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
 TABLE_NAME = "Data"
 
 @app.route("/", methods=["GET", "POST"])
@@ -19,9 +19,12 @@ def receive():
     # --- IoT message ---
     if request.method == "POST":
         data = request.get_json(force=True)
-        print("📩 Received IoT payload:", data)
+        print("📩 Raw IoT payload:", data)
 
-        # Forward to Supabase
+        # Extract your actual data (inside 'message')
+        payload = data.get("message", data)  # fallback if no wrapper
+        print("📦 Cleaned payload to send:", payload)
+
         headers = {
             "apikey": SUPABASE_API_KEY,
             "Authorization": f"Bearer {SUPABASE_API_KEY}",
@@ -30,7 +33,7 @@ def receive():
         }
 
         try:
-            r = requests.post(f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}", headers=headers, json=data)
+            r = requests.post(f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}", headers=headers, json=payload)
             print("➡️ Supabase response:", r.status_code, r.text)
             return jsonify({"status": "ok", "supabase_status": r.status_code}), 200
         except Exception as e:
